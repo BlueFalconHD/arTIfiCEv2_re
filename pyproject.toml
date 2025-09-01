@@ -1,0 +1,7 @@
+[project]
+name = "artificev2-re"
+version = "0.1.0"
+description = "artifice reverse engineering"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
