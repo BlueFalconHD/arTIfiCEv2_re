@@ -62,12 +62,38 @@ def main():
     ap = argparse.ArgumentParser(description="Make a TI-8XP from an arbitrary body")
     ap.add_argument("body", help="path to binary program body")
     ap.add_argument("out",  help="output .8xp path")
+    ap.add_argument("--name", help="program name (1-8 ASCII chars)", dest="name", default=None)
+    ap.add_argument("--comment", "--description", help="program description/comment (ASCII, max 42 chars)", dest="comment", default=None)
     args = ap.parse_args()
 
     body = open(args.body, "rb").read()
     if len(body) > 0xFFFF:
         print("warning: body > 65535 bytes; lengths are 16-bit and will wrap", file=sys.stderr)
 
+    global COMMENT, PROGRAM_NAME
+    program_name_bytes = PROGRAM_NAME
+    if args.name is not None:
+        try:
+            name_ascii = args.name.encode("ascii", "strict")
+        except UnicodeEncodeError:
+            print("error: --name must be ASCII", file=sys.stderr)
+            sys.exit(2)
+        if len(name_ascii) == 0 or len(name_ascii) > 8:
+            print("error: --name length must be between 1 and 8 characters", file=sys.stderr)
+            sys.exit(2)
+        program_name_bytes = name_ascii.ljust(8, b"\x00")
+    header_comment = COMMENT
+    if args.comment is not None:
+        try:
+            comment_ascii = args.comment.encode("ascii", "strict")
+        except UnicodeEncodeError:
+            print("error: --comment must be ASCII", file=sys.stderr)
+            sys.exit(2)
+        if len(comment_ascii) > 42:
+            print("warning: --comment longer than 42 bytes; it will be truncated", file=sys.stderr)
+        header_comment = args.comment
+    COMMENT = header_comment
+    PROGRAM_NAME = program_name_bytes
     hdr  = make_header(len(body))
     meta = make_meta(len(body))
     cks  = checksum(meta, body)

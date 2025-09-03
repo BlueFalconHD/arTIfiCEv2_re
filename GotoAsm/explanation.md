@@ -108,6 +108,11 @@ While the function pointer table base is at `0x09C045`, the lowest possible offs
 
 So the index of `0x02` leads to an offset of `0x06` bytes into the table, which is at `0x09C04B`. The three bytes there point to the OP3 register backing store at `0xD0060E`, which is where execution will jump to when the `jp (hl)` is executed.
 
+> how this exploit was most likely found:
+> It's likely the attacker searched for register controlled indirect jumps and filtered out those which were called/reachable from BASIC execution.
+> from there, only a few sites remain, and the graph format table is one of them.
+> Another possibility is that the attacker searched for the address of several places controlled by BASIC code (OP registers, string buffers, etc) in memory and found out what accessed nearby regions. By doing this, an attacker could potentially determine that an arbitrary jump to an arbitrary address was possible.
+
 ## Code execution explained
 
 The OP3 - OP6 bytes are carefully crafted to self-patch and redirect execution to the BASIC token stream right after the `0x7e` token.
